@@ -1,11 +1,25 @@
-<div align="center">
+# Tempest Mobile
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Tempest is the mobile operator and execution surface for governed AI-assisted security testing.
 
-  <h1>Built with AI Studio</h2>
+## HSE-governed execution
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+Tempest does **not** authorize its own security tests. It requests short-lived execution grants from HSE (HSE Enterprise BOLA Assurance), verifies those grants with HSE's public key, executes only the exact signed scope, and returns evidence to HSE for redaction, hashing, replay checks, and a signed evidence receipt.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+Current protocol: `tempest-hse-v1`
 
-</div>
+- Wire schema: `protocol/tempest-hse-v1.schema.json`
+- Architecture and trust boundary: `docs/HSE_INTEGRATION.md`
+
+### Current v1 scope
+
+- policy-approved synthetic targets only
+- BOLA/IDOR-style read assertions
+- GET-only execution under the existing HSE baseline
+- signed target/identity/resource binding
+- short-lived grants (maximum 300 seconds)
+- explicit request caps (maximum 20 per grant)
+- no destructive actions
+- no private HSE signing keys on the mobile device
+
+The mobile runtime should remain a thin client around this contract. Any future capability expansion must happen through an explicit HSE policy/protocol revision rather than an unsigned Tempest-side override.
