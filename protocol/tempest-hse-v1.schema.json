@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tempest.local/protocol/tempest-hse-v1.schema.json",
+  "title": "Tempest HSE Governed Execution Protocol v1",
+  "oneOf": [
+    { "$ref": "#/$defs/grantRequest" },
+    { "$ref": "#/$defs/executionGrant" },
+    { "$ref": "#/$defs/evidenceBundle" },
+    { "$ref": "#/$defs/evidenceReceipt" }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "grantRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request_id",
+        "target_url",
+        "source_identity",
+        "target_identity",
+        "resource_type",
+        "action",
+        "expected_outcome",
+        "expected_status",
+        "max_requests",
+        "requested_ttl_seconds"
+      ],
+      "properties": {
+        "request_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "target_url": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "source_identity": { "type": "string", "minLength": 1 },
+        "target_identity": { "type": "string", "minLength": 1 },
+        "resource_type": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "action": { "const": "read" },
+        "expected_outcome": { "enum": ["allow", "deny"] },
+        "expected_status": { "type": "integer", "minimum": 100, "maximum": 599 },
+        "max_requests": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "requested_ttl_seconds": { "type": "integer", "minimum": 1, "maximum": 300 }
+      }
+    },
+    "executionGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol_version",
+        "grant_id",
+        "request_id",
+        "policy_id",
+        "policy_version",
+        "policy_hash",
+        "target_url",
+        "source_identity",
+        "target_identity",
+        "resource_type",
+        "action",
+        "expected_outcome",
+        "expected_status",
+        "rate_limit_rps",
+        "max_requests",
+        "issued_at",
+        "expires_at",
+        "nonce",
+        "request_hash",
+        "signature"
+      ],
+      "properties": {
+        "protocol_version": { "const": "tempest-hse-v1" },
+        "grant_id": { "type": "string", "pattern": "^tempest-grant-" },
+        "request_id": { "type": "string", "minLength": 1 },
+        "policy_id": { "type": "string", "minLength": 1 },
+        "policy_version": { "type": "string", "minLength": 1 },
+        "policy_hash": { "$ref": "#/$defs/sha256" },
+        "target_url": { "type": "string", "minLength": 1 },
+        "source_identity": { "type": "string", "minLength": 1 },
+        "target_identity": { "type": "string", "minLength": 1 },
+        "resource_type": { "type": "string", "minLength": 1 },
+        "action": { "const": "read" },
+        "expected_outcome": { "enum": ["allow", "deny"] },
+        "expected_status": { "type": "integer", "minimum": 100, "maximum": 599 },
+        "rate_limit_rps": { "type": "number", "exclusiveMinimum": 0 },
+        "max_requests": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "issued_at": { "type": "string", "format": "date-time" },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "nonce": { "type": "string", "minLength": 16 },
+        "request_hash": { "$ref": "#/$defs/sha256" },
+        "signature": { "type": "string", "minLength": 1 }
+      }
+    },
+    "evidenceBundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grant_id",
+        "execution_id",
+        "observed_at",
+        "status_code",
+        "observed_outcome",
+        "request_fingerprint",
+        "response_fingerprint",
+        "metadata"
+      ],
+      "properties": {
+        "grant_id": { "type": "string", "minLength": 1 },
+        "execution_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "observed_at": { "type": "string", "format": "date-time" },
+        "status_code": { "type": "integer", "minimum": 100, "maximum": 599 },
+        "observed_outcome": { "enum": ["allow", "deny", "error"] },
+        "request_fingerprint": { "$ref": "#/$defs/sha256" },
+        "response_fingerprint": { "$ref": "#/$defs/sha256" },
+        "metadata": { "type": "object" }
+      }
+    },
+    "evidenceReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol_version",
+        "receipt_id",
+        "grant_id",
+        "execution_id",
+        "policy_id",
+        "evidence_hash",
+        "accepted_at",
+        "signature"
+      ],
+      "properties": {
+        "protocol_version": { "const": "tempest-hse-v1" },
+        "receipt_id": { "type": "string", "pattern": "^tempest-receipt-" },
+        "grant_id": { "type": "string", "minLength": 1 },
+        "execution_id": { "type": "string", "minLength": 1 },
+        "policy_id": { "type": "string", "minLength": 1 },
+        "evidence_hash": { "$ref": "#/$defs/sha256" },
+        "accepted_at": { "type": "string", "format": "date-time" },
+        "signature": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
