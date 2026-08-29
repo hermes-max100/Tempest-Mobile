@@ -1,0 +1,49 @@
+name: HSE Protocol
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.11"
+      - name: Parse protocol schema
+        run: python -m json.tool protocol/tempest-hse-v1.schema.json > /dev/null
+      - name: Enforce public-only mobile contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          schema = json.loads(Path("protocol/tempest-hse-v1.schema.json").read_text())
+          rendered = json.dumps(schema).casefold()
+          forbidden = (
+              "private_key",
+              "signing_secret",
+              "seed_phrase",
+              "recovery_phrase",
+              "mnemonic",
+          )
+          leaked = [name for name in forbidden if name in rendered]
+          if leaked:
+              raise SystemExit(f"private authority fields in mobile protocol: {leaked}")
+
+          required_defs = {
+              "grantRequest",
+              "executionGrant",
+              "evidenceBundle",
+              "evidenceReceipt",
+          }
+          if set(schema.get("$defs", {})) != required_defs | {"sha256"}:
+              raise SystemExit("unexpected protocol definition set")
+          PY
